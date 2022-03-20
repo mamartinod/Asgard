@@ -18,8 +18,8 @@ kVLTIBeamWidth = 18.
 kAMBERHeight = 200 #Beam height on the amber table
 kPupilLocation = kTableWidth + 2510.
 
-kBeamWidth = 14.
-kDMSize = 4.0
+kBeamWidth = 12.
+kDMSize = 4.4
 kOAP1x = 100 #Hard to get closer to the table edge than this.
 kAsgardHeight = 125 #Beam height chosen for Asgard.
 
