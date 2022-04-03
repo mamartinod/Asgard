@@ -19,7 +19,7 @@ kAMBERHeight = 200 #Beam height on the amber table
 kPupilLocation = kTableWidth + 2510.
 
 kBeamWidth = 12.
-kDMSize = 4.4
+kDMSize = 4.0
 kOAP1x = 100 #Hard to get closer to the table edge than this.
 kAsgardHeight = 125 #Beam height chosen for Asgard.
 
@@ -40,6 +40,9 @@ DM_OAP2_r =  OAP2_f - focus_to_DM
 OAP2_x = DMx - DM_OAP2_r
 OAP2_y = kAsgardHeight
 
+print("OAP1 Focal Length: {:.1f}".format(OAP1_f))
+print("OAP2 Focal Length: {:.1f}".format(OAP2_f))
+print("Off-axis Angle: {:.2f}".format(np.degrees(np.abs(OAP1_DM_theta))))
 
 plt.figure(1)
 plt.clf()
