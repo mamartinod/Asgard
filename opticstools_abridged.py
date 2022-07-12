@@ -388,7 +388,7 @@ def nglass(l, glass='sio2'):
     elif (glass == 'nsf11'):
         B = np.array([1.73759695E+00,   3.13747346E-01, 1.89878101E+00])
         C = np.array([1.31887070E-02,   6.23068142E-02, 1.55236290E+02])
-    elif (glass == 'ncaf2'):
+    elif (glass == 'caf2'):
         B = np.array([0.5675888, 0.4710914, 3.8484723])
         C = np.array([0.050263605,  0.1003909,  34.649040])**2
     elif (glass == 'mgf2'):
@@ -415,6 +415,12 @@ def nglass(l, glass='sio2'):
     elif (glass == 'znse'): #https://refractiveindex.info/?shelf=main&book=ZnSe&page=Connolly
         B = np.array([4.45813734,0.467216334,2.89566290])
         C = np.array([0.200859853,0.391371166,47.1362108])**2
+    elif (glass == 'zns'): #https://refractiveindex.info/?shelf=main&book=ZnSe&page=Connolly
+        n = 8.393 + 0.14383/(l**2-0.2421**2) + 4430.99/(l**2-36.71**2)
+        return np.sqrt(n)
+    elif (glass == 'al2o3'): #https://refractiveindex.info/?shelf=main&book=ZnSe&page=Connolly
+        B = np.array([1.4313493,0.65054713,5.3414021])
+        C = np.array([0.0726631,0.1193242,18.028251])**2
     elif (glass == 'noa61'):
         n = 1.5375 + 8290.45/(l*1000)**2 - 2.11046/(l*1000)**4
         return n
