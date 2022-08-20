@@ -229,6 +229,32 @@ def mode_2d(V, r, j=0, n=0, sampling=0.3,  sz=1024):
     the_mode[wout] = scale * special.kn(unsigned_j,r[wout]*W0)
     return the_mode/np.sqrt(np.sum(the_mode**2))*np.exp(1j*unsigned_j*th)
 
+def circle(dim,width,interp_edge=False):
+    """This function creates a circle.
+    
+    Parameters
+    ----------
+    dim: int
+        Size of the 2D array
+    width: int
+        diameter of the circle
+        
+    Returns
+    -------
+    pupil: float array (sz,sz)
+        2D array circular pupil mask
+    """
+    x = np.arange(dim)-dim//2
+    xy = np.meshgrid(x,x)
+    xx = xy[1]
+    yy = xy[0]
+    if interp_edge:
+        circle = np.sqrt((width/2.0)**2) - np.sqrt(xx**2+yy**2) + 0.5
+        circle = np.maximum(np.minimum(circle, 1),0)
+    else:
+        circle = ((xx**2+yy**2) < (width/2.0)**2).astype(float)
+    return circle
+
 def compute_v_number(wavelength_in_mm, core_radius, numerical_aperture):
     """Computes the V number (can be interpreted as a kind of normalized optical frequency) for an optical fibre
     

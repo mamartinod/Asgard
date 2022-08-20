@@ -20,7 +20,7 @@ import scipy.optimize as op
 
 #Air properties. 
 plot_extra=False
-t_air = 5.0 #InC
+t_air = 17.5 #InC
 p_air = 750e2 #In Pascals
 
 #From https://www.eso.org/gen-fac/pubs/astclim/paranal/h2o/
@@ -29,15 +29,16 @@ p_air = 750e2 #In Pascals
 #... there is ~800 Pa of partial pressure at 100% humidity at 5C, which is 0.34 mol/m^3.
 #... meaning that a humidity of 30% corresponds to that 0.1 mol/m^3 line. 
 
-h_air = 0.3 #humidity: between 0 and 1
+h_air = 0.1 #humidity: between 0 and 1
 glass = 'al2o3'
 glass2 = 'znse' 
-delta = 50.0
+delta = 9.0
 N_wn = 100
 
 #Wave-number in um^-1
 wn = np.linspace(1/4.0,1/3.4,N_wn)
-offset = -25e-6/100
+offset = 0#-.3e-6/100#-25e-6/100
+offset0 = offset
 #wn = np.linspace(1/3.9,1/3.5,N_wn)
 #offset = -12e-6/100
 
@@ -45,6 +46,7 @@ mn_wn = 0.5*(wn[1:] + wn[:-1])
 del_wn = wn[1:] - wn[:-1]
 
 nm1_air = ot.nm1_L_air(1./wn,t_air,p_air,h_air)
+#nm1_air = ot.nm1_air(1./wn,t_air,p_air,h_air,450)
 n_glass = ot.nglass(1./wn, glass=glass)
 n_glass2 = ot.nglass(1./wn, glass=glass2)
 
@@ -111,15 +113,17 @@ x0 = x_matsolve[4*N_wn//10]
 x0_2 = x2_matsolve[4*N_wn//10] 
 phase = 2*np.pi*delta*1e6*((x0[0] + offset)*(nm1_air+1.0) + x0[1]*n_glass - 1.0)*wn
 phase2 = 2*np.pi*delta*1e6*(x0_2[0]*(nm1_air+1.0) + x0_2[1]*n_glass +x0_2[2]*n_glass2 - 1.0)*wn
+phase0 = 2*np.pi*delta*1e6*((1/b1_air[5*N_wn//10] + offset0)*(nm1_air+1.0) - 1.0)*wn
 plt.figure(1)
 #plt.clf()
 plt.plot(1/wn, phase-np.mean(phase), 'C3', label='1 glass')
 plt.plot(1/wn, phase2-np.mean(phase2), 'C2', label='2 glasses')
+plt.plot(1/wn, phase0-np.mean(phase0), 'C1', label='air only')
 plt.legend()
 
 plt.xlabel('Wavelength')
 plt.ylabel(r'Fringe Phase (radians)')
-plt.title('{0:5.1f}m of air path and 30% RH'.format(delta))
+plt.title('{0:5.1f}m of air path and {1:.0f}% RH'.format(delta,h_air*100))
 
 print('Glass thickness: {:5.2f}mm'.format(x0[1]*delta*1e3))
 print('Double glass thicknesses: {:5.2f}mm, {:5.2f}mm'.format(x0_2[1]*delta*1e3, x0_2[2]*delta*1e3))

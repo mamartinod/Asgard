@@ -142,8 +142,10 @@ plt.text(m4[0]-6,m4[1]+10,'C')
 
 #The mount for the H dichroic.
 theta = np.linspace(0,2*np.pi,100)
-Hdich_center = det_cent + shield_vect*75
-plt.plot(Hdich_center[0] + 14.8*np.cos(theta), Hdich_center[1] + 14.8*np.sin(theta),'m:')
+Hdich_center = det_cent + shield_vect*68
+mount_rad=16.5/2
+plt.plot(Hdich_center[0] + mount_rad*np.cos(theta), Hdich_center[1] + mount_rad*np.sin(theta),'m:')
+
 
 #The beams
 #plt.plot(b2[0], b2[1], label='H1')

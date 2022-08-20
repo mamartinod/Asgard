@@ -19,17 +19,25 @@ import scipy.optimize as op
 
 #Here is some band edges for R~50 in J. Roughly worst-case (Y is a little TBD)
 band_edges = np.linspace(1.15,1.33,8)
-#band_edges = np.linspace(1.5,1.8,8)
 
-band_edges = np.linspace(0.95,1.8,50)
+#Now some Y to H band edges, and some examples including K
+band_edges = np.linspace(1.0,1.8,50)
 #band_edges = np.concatenate( (np.linspace(1.15,1.95,30),[2.15,2.35]) )
 #band_edges = np.concatenate( (np.linspace(0.95,1.95,50),[2.15,2.35]) )
 
-#These are cut-and-paste from opticstools (Mike's library)
+#Here are edges for Heimdallr only.
+band_edges = [1.95,2.15,2.35]
 
+#These are cut-and-paste from opticstools (Mike's library)
 def vis_loss(x, wn, nm1_air, n_glass, wl_los=band_edges[:-1], wl_his=band_edges[1:], n_sub=None):
-    """Find the approximate loss in V^2 in the quadratic
-    approximation per 100m of vacuum
+    """Find the approximate loss in visibility in the quadratic
+    approximation per 100m of vacuum.
+    
+    The quadratic approximation is: 
+    V = mean(exp(i phi))
+      = mean(cos(phi)), as the imaginary part averages to zero.
+      = mean(1 - 0.5 phi^2)
+      \approx exp(-0.5 phi^2)
     """
     #FIXME: Finish documentation
     if n_sub is None:
@@ -51,7 +59,8 @@ def vis_loss(x, wn, nm1_air, n_glass, wl_los=band_edges[:-1], wl_his=band_edges[
     for ix_lo,ix_hi in zip(ix_los, ix_his):
         phase_sub = phase[ix_lo:ix_hi]
         mnsq += np.var(phase_sub)
-    return 100**2*mnsq/n_sub
+    #Convert to visibility (rather than V^2 loss) by multiplying by 0.5
+    return 100**2*mnsq/n_sub * 0.5
 
 #Air properties. Note that this formula isn't supposed to work at longer wavelengths
 #Then H or K.
@@ -101,8 +110,9 @@ best_x = op.minimize(vis_loss, x0, args=(wn, nm1_air, n_glass, wl_los, wl_his), 
 print("Visibility Loss (lsq): " + str(vis_loss(best_x.x, wn, nm1_air, n_glass)))
 
 best_x_noldc = op.minimize(vis_loss, x0[:1], args=(wn, nm1_air, n_glass, wl_los, wl_his), tol=1e-8, method='Nelder-Mead') 
-print("Visibility Loss (lsq, no LDC): " + str(vis_loss(best_x_noldc.x[:1], wn, nm1_air, n_glass)))
-
+no_ldc_loss = vis_loss(best_x_noldc.x[:1], wn, nm1_air, n_glass)
+print("Visibility Loss (lsq, no LDC): {:.3f}".format(no_ldc_loss))
+print("i.e. Average visibility (no LDC): {:.3f}".format(np.exp(-no_ldc_loss)))
 
 phase = 2*np.pi*delta*1e6*(best_x.x[0]*(nm1_air+1.0) + best_x.x[1]*n_glass - 1.0)*wn
 phase_noldc = 2*np.pi*delta*1e6*(best_x_noldc.x[0]*(nm1_air+1.0) - 1.0)*wn
