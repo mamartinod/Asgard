@@ -94,6 +94,7 @@ throughput_bif = 0.08
 throughput_nott = 0.0837
 # throughput_nott = 0.0000023859
 throughput_mmf_to_smf = 0.01
+throughput_4beams_creator = 0.022
 
 """
 Load spectra of Thorlabs lamps.
@@ -156,10 +157,10 @@ Plot the result
 plot_lamp(sl202l[0], sl202l_ph, 'SL202L', (heimdallr.value, 'HEIMDALLR'), (baldr.value, 'Baldr'),
           (bifrost.value, 'BIFROST'), (nott.value, 'NOTT'))
 
-heimdallr_ph = plot_crop_lamp(sl202l[0], heimdallr, sl202l_ph_mode, throughput_hei * throughput_mmf_to_smf, 'SL202L - HEI')
-baldr_ph = plot_crop_lamp(sl202l[0], baldr, sl202l_ph_mode, throughput_bal * throughput_mmf_to_smf, 'SL202L - BAL')
-bifrost_ph = plot_crop_lamp(sl202l[0], bifrost, sl202l_ph_mode, throughput_bif * throughput_mmf_to_smf, 'SL202L - BIF')
-nott_ph = plot_crop_lamp(sl202l[0], nott, sl202l_ph_mode, throughput_nott * throughput_mmf_to_smf, 'SL202L - NOTT')
+heimdallr_ph = plot_crop_lamp(sl202l[0], heimdallr, sl202l_ph_mode, throughput_hei * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - HEI')
+baldr_ph = plot_crop_lamp(sl202l[0], baldr, sl202l_ph_mode, throughput_bal * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - BAL')
+bifrost_ph = plot_crop_lamp(sl202l[0], bifrost, sl202l_ph_mode, throughput_bif * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - BIF')
+nott_ph = plot_crop_lamp(sl202l[0], nott, sl202l_ph_mode, throughput_nott * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - NOTT')
 
 
 bg_ph = plot_crop_lamp(sl202l[0], nott, background, 0.14*(1-0.59), 'SL202L - NOTT background')
