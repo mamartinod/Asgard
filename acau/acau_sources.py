@@ -10,6 +10,8 @@ import numpy as np
 from astropy.constants import h, c, k_B
 import matplotlib.pyplot as plt
 from astropy import units as u
+from scipy.interpolate import interp1d
+from scipy.integrate import trapezoid, quad
 
 def load_lamp(path, power):
     data = np.loadtxt(path)
@@ -71,6 +73,9 @@ def sellmeier(wl, u0, u1, u2, u3, u4, u5, A):
     n = n**0.5
     return n
     
+def star_simulator(wl, Teff, mag):
+    pass
+    
 """
 Spectral boundaries of the instrument
 """
@@ -91,10 +96,12 @@ Throughput of the instruments (VLTI not included)
 throughput_hei = 0.5
 throughput_bal = 0.5
 throughput_bif = 0.08
-throughput_nott = 0.0837
+throughput_nott = 0.94 * 0.61 * 0.1427
 # throughput_nott = 0.0000023859
 throughput_mmf_to_smf = 0.01
+throughput_4beams_creator = 1.
 throughput_4beams_creator = 0.022
+throughput_vlti = 0.33
 
 """
 Load spectra of Thorlabs lamps.
@@ -160,10 +167,8 @@ plot_lamp(sl202l[0], sl202l_ph, 'SL202L', (heimdallr.value, 'HEIMDALLR'), (baldr
 heimdallr_ph = plot_crop_lamp(sl202l[0], heimdallr, sl202l_ph_mode, throughput_hei * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - HEI')
 baldr_ph = plot_crop_lamp(sl202l[0], baldr, sl202l_ph_mode, throughput_bal * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - BAL')
 bifrost_ph = plot_crop_lamp(sl202l[0], bifrost, sl202l_ph_mode, throughput_bif * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - BIF')
-nott_ph = plot_crop_lamp(sl202l[0], nott, sl202l_ph_mode, throughput_nott * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - NOTT')
-
-
-bg_ph = plot_crop_lamp(sl202l[0], nott, background, 0.14*(1-0.59), 'SL202L - NOTT background')
+bg_ph = plot_crop_lamp(sl202l[0], nott, background, 0.14*(1-0.59), 'SL202L - NOTT background', False)
+nott_ph = plot_crop_lamp(sl202l[0], nott, sl202l_ph_mode, throughput_nott * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - NOTT', False)
 
 print(heimdallr_ph[-1] / (3000 * 50000)) #See Mike's email 2022-10-5, "Selecting internal sources"
 print('Number of photons per second across instrument spectral bands:')
@@ -174,3 +179,163 @@ print('NOTT', nott_ph[-1])
 print('BG  ', bg_ph[-1])
 print('Is source brighter than background for Nott?', nott_ph[-1] > bg_ph[-1])
 print('NOTT / background ratio', nott_ph[-1].value / bg_ph[-1].value)
+
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+width = 6.528 * 1.5
+height = width / 1.618
+sz = 16
+plt.rc('xtick', labelsize=sz)
+plt.rc('ytick', labelsize=sz)
+plt.rc('axes', labelsize=sz)
+plt.rc('legend', fontsize=14)
+plt.rc('font', size=sz)
+plt.figure(figsize=(width, height))
+plt.plot(nott_ph[0], nott_ph[1], label='NOTT spectrum')
+plt.plot(bg_ph[0], bg_ph[1], label='Bg spectrum')
+plt.grid()
+plt.legend(loc='best')
+plt.xlabel(r'Wavelength (nm)')
+plt.ylabel('Spectrum (ph/s/nm/mode)')
+plt.title('NOTT and Bg spectra')
+plt.tight_layout()
+    
+plt.close('all')
+
+def get_flux_on_px(wl0, R, bandwidth, px_sampling, flux_wl, flux_ph, wl_bounds):
+    global wl_pix, dl_pixel
+    unit = flux_wl.unit
+    if R > 0:
+        dl = wl0 / R
+    else:
+        dl = wl_bounds[1] - wl_bounds[0]
+        
+    dl = dl.to(unit)
+    nb_channels = np.around(bandwidth / dl)
+    nb_pixels = nb_channels * px_sampling
+    dl_pixel = bandwidth / nb_pixels
+    dl_pixel = dl_pixel.to(unit)
+    flux_ph_function = interp1d(flux_wl, flux_ph, kind='quadratic')
+    wl_pix = np.arange(wl_bounds[0].value, wl_bounds[-1].value+dl_pixel.value, dl_pixel.value) * unit
+    wl_pix = np.around(wl_pix, decimals=9)
+    wl_pix = wl_pix[(wl_pix>=wl_bounds[0]) & (wl_pix<=wl_bounds[1])]
+    flux_ph_px = np.array([quad(flux_ph_function, wl_pix[i].value, wl_pix[i+1].value)[0] for i in range(wl_pix.size-1)]) # in ph/s/px
+    
+    return wl_pix[:-1], flux_ph_px, nb_pixels
+
+def get_flux_in_pe(flux, QE, dit):
+    flux_pe = flux * QE # e-/s/px
+    flux_dit = flux_pe * dit # e-/px
+    
+    return flux_dit
+    
+nott_wl0 = 3.75 * u.um
+resolving_power = 400
+nott_Dl = nott[1] - nott[0]
+spectral_sampling = 3 # in px
+QE = 0.7
+ron = 15 # e-/dit
+snr = 5
+dit = 1. # in second
+spatial_width = 2. # in px
+well_depth = 85000 # e-
+throughput_4beams_creator = 1.
+
+throughput_nott = 0.94 * 0.19 * 0.1427
+nott_ph = plot_crop_lamp(sl202l[0], nott, sl202l_ph_mode, throughput_nott * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - NOTT - HR', False)
+bg_ph = plot_crop_lamp(sl202l[0], nott, background, 0.14*(1-0.19), 'SL202L - NOTT background - HR', False)
+
+# nott_source_ph = plot_crop_lamp(sl202l[0], nott, sl202l_ph_mode, 1. * throughput_mmf_to_smf * throughput_4beams_creator, 'SL202L - L band', True)
+
+plt.figure(figsize=(width, height))
+plt.plot(nott_ph[0], nott_ph[1], label='NOTT spectrum')
+plt.plot(bg_ph[0], bg_ph[1], label='Bg spectrum')
+plt.grid()
+plt.legend(loc='best')
+plt.xlabel(r'Wavelength (nm)')
+plt.ylabel('Spectrum (ph/s/nm/mode)')
+plt.title('NOTT and Bg spectra')
+plt.tight_layout()
+
+
+nott_ph_wl, nott_ph_px, nott_wl_nbpx = get_flux_on_px(nott_wl0, resolving_power, nott_Dl, spectral_sampling, nott_ph[0], nott_ph[1], nott)
+bg_ph_wl, bg_ph_px, bg_wl_nbpx = get_flux_on_px(nott_wl0, resolving_power, nott_Dl, spectral_sampling, bg_ph[0], bg_ph[1], nott)
+
+nott_ph_sp = np.sum(np.reshape(nott_ph_px, (-1, spectral_sampling)), 1) # in ph/s/spectral channel
+bg_ph_sp = np.sum(np.reshape(bg_ph_px, (-1, spectral_sampling)), 1) # in ph/s/spectral channel
+nott_wl_sp = np.mean(np.reshape(nott_ph_wl, (-1, spectral_sampling)), 1)
+bg_wl_sp = np.mean(np.reshape(bg_ph_wl, (-1, spectral_sampling)), 1)
+ron /= QE # in ph
+well_depth /= QE # in ph
+total_well = well_depth * spatial_width * spectral_sampling
+
+dit_list = np.logspace(-4, -1, 10)
+signal_list = []
+noise_list = []
+saturation_list = []
+
+for dit in dit_list:
+    nott_dit = nott_ph_sp * dit # ph/dit/spectral channel
+    bg_dit = bg_ph_sp * dit # ph/dit/spectral channel
+    bg_photon_noise = bg_dit**0.5
+    total_noise = (bg_photon_noise**2 + nott_dit*0 + spatial_width * spectral_sampling * ron**2)**0.5
+    total_flux = nott_dit + bg_dit
+    saturation = np.zeros_like(nott_dit, dtype=bool)
+    saturation[total_flux > 0.9*total_well] = True
+    
+    signal_list.append(nott_dit)
+    noise_list.append(total_noise)
+    saturation_list.append(saturation)
+
+signal_list = np.array(signal_list)
+noise_list = np.array(noise_list)
+saturation_list = np.array(saturation_list)
+
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+width = 6.528 * 1.5
+height = width / 1.618
+sz = 16
+plt.rc('xtick', labelsize=sz)
+plt.rc('ytick', labelsize=sz)
+plt.rc('axes', labelsize=sz)
+plt.rc('legend', fontsize=14)
+plt.rc('font', size=sz)
+plt.figure(figsize=(width, height))
+plt.semilogy(nott_wl_sp, signal_list.T, '-', lw=3)
+plt.semilogy(bg_wl_sp, noise_list.T, '--', lw=3)
+plt.grid()
+plt.legend(['DIT = %.1g s'%elt for elt in dit_list], loc='upper left', bbox_to_anchor=[1. ,1.])
+plt.xlabel(r'Wavelength (nm)')
+plt.ylabel('Spectrum (ph/DIT/spectral channel)')
+plt.title('NOTT and Bg spectra')
+plt.tight_layout()
+# plt.savefig('/mnt/96980F95980F72D3/Asgard/acau/flux_acau_throughput_%.1f_R_%04d.png'%(throughput_4beams_creator*100, resolving_power), format='png', dpi=150)
+
+plt.figure(figsize=(width, height))
+plt.semilogy(nott_wl_sp, signal_list.T/noise_list.T, '-', lw=3)
+plt.semilogy(nott_wl_sp, [snr]*nott_wl_sp.size, 'k--', lw=3)
+plt.grid()
+plt.legend(['DIT = %.1g s'%elt for elt in dit_list]+['Required SNR'], loc='upper left', bbox_to_anchor=[1. ,1.])
+plt.xlabel(r'Wavelength (nm)')
+plt.ylabel('SNR')
+plt.title('NOTT SNR per spectral channel')
+plt.tight_layout()
+# plt.savefig('/mnt/96980F95980F72D3/Asgard/acau/snr_acau_throughput_%.1f_R_%04d.png'%(throughput_4beams_creator*100, resolving_power), format='png', dpi=150)
+
+plt.figure(figsize=(width, height))
+plt.plot(nott_wl_sp, saturation_list.T, '.-', lw=3)
+plt.grid()
+plt.legend(['DIT = %.1g s'%elt for elt in dit_list]+['Required SNR'], loc='upper left', bbox_to_anchor=[1. ,1.])
+plt.xlabel(r'Wavelength (nm)')
+plt.ylabel('Saturation')
+plt.title('Saturation')
+plt.tight_layout()
+plt.tight_layout()
+
+total_noise_ph = (bg_ph[1].value + nott_ph[1].value + spatial_width * spectral_sampling * ron**2)**0.5
+
+plt.figure(figsize=(width, height))
+plt.plot(nott_ph[0].value, total_noise_ph*5, '-', lw=3)
+plt.grid()
+plt.xlabel(r'Wavelength (nm)')
+plt.tight_layout()
+plt.tight_layout()
