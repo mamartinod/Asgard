@@ -21,12 +21,12 @@ import scipy.optimize as op
 band_edges = np.linspace(1.15,1.33,8)
 
 #Now some Y to H band edges, and some examples including K
-band_edges = np.linspace(1.0,1.8,50)
+band_edges = np.linspace(1.05,1.65,50)
 #band_edges = np.concatenate( (np.linspace(1.15,1.95,30),[2.15,2.35]) )
 #band_edges = np.concatenate( (np.linspace(0.95,1.95,50),[2.15,2.35]) )
 
 #Here are edges for Heimdallr only.
-band_edges = [1.95,2.15,2.35]
+#band_edges = [1.95,2.15,2.35]
 
 #These are cut-and-paste from opticstools (Mike's library)
 def vis_loss(x, wn, nm1_air, n_glass, wl_los=band_edges[:-1], wl_his=band_edges[1:], n_sub=None):
@@ -70,7 +70,7 @@ p_air = 750e2 #In Pascals
 h_air = 0.0 #humidity: between 0 and 1
 xc_air = 400.
 glass = 'znse' 
-glass = 'nsf11' 
+#glass = 'nsf11' 
 delta = 100.0
 N_wn = 150
 wl_los=band_edges[:-1]
