@@ -13,8 +13,11 @@ bsy = np.array([1,3,3,4,4,5,5,5,5])
 y = np.arange(7)
 
 xscale = 120
-yscale = 50
-yoffset = 350
+yscale = 30
+yoffset = 200
+
+OPD_vertical = 300
+OPD_to_input = OPD_vertical + 7*np.sqrt(xscale**2 + yscale**2)
 
 plt.clf()
 plt.plot(x1*xscale,yoffset-y*yscale)
@@ -35,3 +38,5 @@ R = 0.31
 T = 0.56
 efficiency = R**2 * T**2
 print("Efficiency: {:.3f}".format(efficiency))
+
+print("Pupil position behind lens: {.1f}".format(2000-OPDto_input))

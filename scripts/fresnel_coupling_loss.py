@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 plt.ion()
 
 #In mm
-beam_size = 10.0 
+beam_size = 12.0 
 #Longest wavelength (in microns)
-wave = 3.0
+wave = 1.65
 #Gaussian 1/e^2 half-width in units of lambda/D
 gw = 0.70
 obstruction_sz = 0.1
