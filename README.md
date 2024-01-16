@@ -5,9 +5,9 @@ Official Asgard's codes repository.
 
 Structure of the repo:
 
-- The sub-repo ``designs'' contains some step files about the opto-mechanical design (may be out-dated);
-- The sub-repo ``simulation'' contains codes and results of quick calculations for various things (refraction, throughput, dispersion...)
-- The sub-repo ``software'' can contain sub-repos for the software of WAG and the instruments (baldr, bifrost, heimdallr, nott, solarstein)
+- The sub-repo ``designs`` contains some step files about the opto-mechanical design (may be out-dated);
+- The sub-repo ``simulation`` contains codes and results of quick calculations for various things (refraction, throughput, dispersion...)
+- The sub-repo ``software`` can contain sub-repos for the software of WAG and the instruments (baldr, bifrost, heimdallr, nott, solarstein)
 
 # Acknowledgments
 Asgard is funded by: 
