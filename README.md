@@ -1,4 +1,6 @@
-![Asgard logo](rsc/asgard_logo.png)
+<p align="center">
+<img src="rsc/asgard_logo.png" alt="Asgard logo" width="400"/>
+</p>
 
 # Asgard
 Official Asgard's codes repository.
