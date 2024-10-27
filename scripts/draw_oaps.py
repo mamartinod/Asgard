@@ -12,10 +12,16 @@ oap2_decentre = np.sqrt(67**2 + 29.6**2)
 oap2_rad = 12.7
 oap2_angle = np.radians(9.268)
 
+oap3_ROC = 474
+oap3_decentre = 127
+oap3_rad = 12.7
+oap3_angle = np.radians(30)
+
 centre_thickness = 15
 
-for ix, (ROC, decentre, rad, angle) in enumerate(zip([oap1_ROC,oap2_ROC],\
-	[oap1_decentre,oap2_decentre], [oap1_rad, oap2_rad],[oap1_angle, oap2_angle])):
+for ix, (ROC, decentre, rad, angle) in enumerate(zip([oap1_ROC,oap2_ROC, oap3_ROC],\
+	[oap1_decentre,oap2_decentre, oap3_decentre], [oap1_rad, oap2_rad, oap3_rad],\
+	[oap1_angle, oap2_angle, oap3_angle])):
 	plt.figure(ix+1)
 	plt.clf()
 	x = np.linspace(decentre-rad, decentre+rad,100)
@@ -30,3 +36,5 @@ for ix, (ROC, decentre, rad, angle) in enumerate(zip([oap1_ROC,oap2_ROC],\
 	plt.ylabel('Height (mm)')
 	plt.tight_layout()
 	plt.savefig('OAP{:d}.png'.format(ix+1))
+	
+r = 280
