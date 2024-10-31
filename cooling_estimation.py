@@ -129,27 +129,43 @@ print('Differential pressure (bar):', dp)
 print('Within specification?', (dp <= max_diff_pressure) & (min_diff_pressure <= dp))
 
 # =============================================================================
-# VLTI lab above-table cooling cabinets
+# VLTI lab HDL above-table cooling cabinets
 # =============================================================================
-heat_load = 170 # in W
+heat_load = 30 # in W
 dT = diff_temp(heat_load, Cp, rho, lab_flow_rate)
 print('\nTemperature variation for HDL above-table cooling cabinet (degC):', dT)
 print('Within specification?', dT <= max_dT)
 
 # =============================================================================
-# VLTI lab DM under-table cooling cabinets
+# VLTI lab HDL under-table cooling cabinets
 # =============================================================================
-heat_load = 190 # in W
+heat_load = 362 # in W
 dT = diff_temp(heat_load, Cp, rho, lab_flow_rate)
-print('\nTemperature variation for DM under-table cooling cabinet 1 (degC):', dT)
+print('\nTemperature variation for HDL under-table cooling cabinet 1 (degC):', dT)
 print('Within specification?', dT <= max_dT)
 
 # =============================================================================
 # VLTI lab NOTT under-table cooling cabinets
 # =============================================================================
-heat_load = 300 # in W
+heat_load = 200 # in W
 dT = diff_temp(heat_load, Cp, rho, lab_flow_rate)
 print('\nTemperature variation for NOTT under-table cooling cabinet 1 (degC):', dT)
+print('Within specification?', dT <= max_dT)
+
+# =============================================================================
+# VLTI lab BIF under-table cooling cabinets
+# =============================================================================
+heat_load = 400 # in W
+dT = diff_temp(heat_load, Cp, rho, lab_flow_rate)
+print('\nTemperature variation for BIFROST under-table cooling cabinet 1 (degC):', dT)
+print('Within specification?', dT <= max_dT)
+
+# =============================================================================
+# VLTI lab BIF on-table cooling cabinets
+# =============================================================================
+heat_load = 200 # in W
+dT = diff_temp(heat_load, Cp, rho, lab_flow_rate)
+print('\nTemperature variation for BIFROST on-table cooling cabinet 1 (degC):', dT)
 print('Within specification?', dT <= max_dT)
 
 # =============================================================================
@@ -158,8 +174,8 @@ print('Within specification?', dT <= max_dT)
 """
 Flow rate of the cryo compressor must be 9L/min minimum.
 """
-heat_load = 30 # in W
-dT = diff_temp(heat_load, Cp, rho, 0.009/60)
+heat_load = 5000 # in W
+dT = diff_temp(heat_load, Cp, rho, 0.011/60)
 print('\nTemperature variation for NOTT Cryo compressor (degC):', dT)
 print('Within specification?', dT <= max_dT)
 
