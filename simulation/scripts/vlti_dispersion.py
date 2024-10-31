@@ -17,19 +17,21 @@ if not '..' in sys.path:
 import opticstools_abridged as ot
 import scipy.optimize as op
 
-#Here is some band edges for R~50 in J. Roughly worst-case (Y is a little TBD)
-band_edges = np.linspace(1.15,1.33,8)
+#Here is some band edges for R~50 in J. 
+band_edges = np.linspace(1.05,1.33,8)
+#band_edges = np.linspace(1.5,1.8,8)
 
 #Now some Y to H band edges, and some examples including K
-band_edges = np.linspace(1.05,1.65,50)
-#band_edges = np.concatenate( (np.linspace(1.15,1.95,30),[2.15,2.35]) )
-#band_edges = np.concatenate( (np.linspace(0.95,1.95,50),[2.15,2.35]) )
+#band_edges = np.linspace(1.05,1.8,50)
 
 #Here are edges for Heimdallr only.
-#band_edges = [1.95,2.15,2.35]
+band_edges = [1.95,2.15,2.35]
+
+#Path length difference
+delta = 112.0
 
 #These are cut-and-paste from opticstools (Mike's library)
-def vis_loss(x, wn, nm1_air, n_glass, wl_los=band_edges[:-1], wl_his=band_edges[1:], n_sub=None):
+def vis_loss(x, wn, nm1_air, n_glass, wl_los=band_edges[:-1], wl_his=band_edges[1:], n_sub=None, delta=delta):
     """Find the approximate loss in visibility in the quadratic
     approximation per 100m of vacuum.
     
@@ -60,18 +62,18 @@ def vis_loss(x, wn, nm1_air, n_glass, wl_los=band_edges[:-1], wl_his=band_edges[
         phase_sub = phase[ix_lo:ix_hi]
         mnsq += np.var(phase_sub)
     #Convert to visibility (rather than V^2 loss) by multiplying by 0.5
-    return 100**2*mnsq/n_sub * 0.5
+    return delta**2*mnsq/n_sub * 0.5
 
 #Air properties. Note that this formula isn't supposed to work at longer wavelengths
 #Then H or K.
 plot_extra=False
-t_air = 5.0 #InC
-p_air = 750e2 #In Pascals
-h_air = 0.0 #humidity: between 0 and 1
+t_air = 5.0 	#InC
+p_air = 750e2 	#In Pascals
+h_air = 0.0 	#humidity: between 0 and 1
 xc_air = 400.
-glass = 'znse' 
+glass = 'zns' 
 #glass = 'nsf11' 
-delta = 100.0
+
 N_wn = 150
 wl_los=band_edges[:-1]
 wl_his=band_edges[1:]
@@ -84,7 +86,8 @@ del_wn = wn[1:] - wn[:-1]
 nm1_air = ot.nm1_air(1./wn,t_air,p_air,h_air,xc_air)
 n_glass = ot.nglass(1./wn, glass=glass)
 
-#Derivatives evaluated everywhere but endpoints.
+#*** Approach 1 - use the Tango (1990) solution ***
+#Centered finite difference derivatives evaluated everywhere but endpoints.
 d1_air = (nm1_air[2:]-nm1_air[:-2])/(wn[2:] - wn[:-2]) 
 d2_air = (nm1_air[2:]-2*nm1_air[1:-1]+nm1_air[:-2])/(0.5*(wn[2:] - wn[:-2]))**2
 b1_air = 1.0 + nm1_air[1:-1] + wn[1:-1] * d1_air 
@@ -101,8 +104,9 @@ x0s = np.zeros( (len(b1_air),2) )
 x0s[:,0] = 1.0
 x_matsolve = np.linalg.solve(b_arrs, x0s)
 
-#Unfortunately, that was just a guess. Now we need a least-squares about this
-#to optimise the amount of glass
+#*** Approach 2 Least Squares **
+#Unfortunately, that had a   different optimal glass thickness at each wavelength. Now we 
+#want a least-squares about this typical position.
 x0 = x_matsolve[N_wn//2]
 print("Visibility Loss (matsolve): " + str(vis_loss(x0, wn, nm1_air, n_glass)))
 #best_x = op.minimize(vis_loss, x0, args=(wn, nm1_air, n_glass), options={'eps':1e-13, 'gtol':1e-4}, tol=1e-6, method='bfgs')
@@ -134,17 +138,7 @@ plt.ylabel(r'Fringe Phase (radians)')
 plt.title('{0:5.1f}m of air path and 2.3mm PWV'.format(delta))
 
 print('Glass thickness: {:5.2f}mm'.format(best_x.x[1]*delta*1e3))
+print(f'x0 (no LDC): {best_x_noldc.x[0]:.6f}')
+print(f'x0 (with LDC): {best_x.x[0]:.6f}')
+print(f'x1 (with LDC): {best_x.x[1]:.3e}')
 
-#Original test plotting code
-if False:
-    #Rather than picking a single wavelength, lets take a few
-    #key wavelengths and see the result
-    plt.clf()
-    for ix in [25,50,75]:
-        x_air = x[ix,0]
-        x_glass = x[ix,1]
-
-        #Now compute the fringe phase as a function of wavenumber
-        phase = 1e6*(x_air*nm1_air[1:-1] + x_glass*n_glass[1:-1] - delta)*wn[1:-1]
-
-        plt.plot(1./wn[1:-1], phase - np.mean(phase))

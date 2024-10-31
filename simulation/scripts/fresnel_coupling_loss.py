@@ -7,12 +7,14 @@ import matplotlib.pyplot as plt
 plt.ion()
 
 #In mm
-beam_size = 12.0 
+beam_size = 12.0 #150.0 
 #Longest wavelength (in microns)
-wave = 1.65
+wave = 1.65 #18.5 
 #Gaussian 1/e^2 half-width in units of lambda/D
 gw = 0.70
 obstruction_sz = 0.1
+zs = np.arange(21)/2 * 1000
+#zs = np.arange(301)*1000
 #------------------------------
 r = np.arange(300)/100
 difflim_E = ot.airy(r, obstruction_sz=obstruction_sz)
@@ -20,8 +22,7 @@ difflim_E = ot.airy(r, obstruction_sz=obstruction_sz)
 gg = np.exp(-(r/gw)**2)
 #2D radially symmetric integral normalisation
 norm = np.trapz(gg**2*r,r)*np.trapz(difflim_E**2*r, r)
-zs = np.arange(21)/2 * 1000
-overlaps = np.empty(21)
+overlaps = np.empty(len(zs))
 for i, z in enumerate(zs):
     complex_integrand = r*gg*difflim_E*np.exp(-1j*np.pi*r**2*wave*1e-3*z/beam_size**2)
     overlaps[i] =  (np.trapz(complex_integrand.real,r)**2 + np.trapz(complex_integrand.imag,r)**2)/norm 
